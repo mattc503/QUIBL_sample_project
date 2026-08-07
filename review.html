@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pairwise Review — PLEDGE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E6EAEC;
+    --panel:#FCFCFB;
+    --ink:#13202A;
+    --mid:#54626D;
+    --soft:#8C979F;
+    --rule:#CBD3D8;
+    --accent:#0E6157;
+    --accent-soft:#D4E5E1;
+    --warn:#8F3A1E;
+    --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+    --sans:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--sans);font-size:15px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .label{
+    font-family:var(--mono);font-size:11px;font-weight:500;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--soft);
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px}
+
+  header{
+    display:flex;align-items:baseline;justify-content:space-between;
+    gap:16px;padding:26px 0 20px;border-bottom:1px solid var(--rule);
+    flex-wrap:wrap;
+  }
+  h1{
+    font-family:var(--mono);font-size:15px;font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;margin:0;
+  }
+  h1 span{color:var(--soft);font-weight:400}
+  .count{font-family:var(--mono);font-size:12px;color:var(--mid)}
+
+  /* ---- question ---- */
+  .ask{padding:24px 0 20px;border-bottom:1px solid var(--rule)}
+  textarea{
+    width:100%;min-height:74px;resize:vertical;padding:13px 14px;
+    font-family:var(--sans);font-size:15px;line-height:1.5;color:var(--ink);
+    background:var(--panel);border:1px solid var(--rule);border-radius:2px;
+  }
+  textarea:focus,input:focus,select:focus,button:focus-visible{
+    outline:2px solid var(--accent);outline-offset:1px;
+  }
+  .askrow{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  input[type=text],select{
+    font-family:var(--mono);font-size:12px;padding:8px 9px;color:var(--ink);
+    background:var(--panel);border:1px solid var(--rule);border-radius:2px;
+  }
+  input[type=text]{width:88px}
+  button{
+    font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;padding:9px 16px;border-radius:2px;cursor:pointer;
+    border:1px solid var(--ink);background:var(--ink);color:var(--panel);
+  }
+  button:hover:not(:disabled){background:var(--accent);border-color:var(--accent)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+  button.ghost:hover:not(:disabled){background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .spacer{flex:1}
+
+  /* ---- panels ---- */
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);
+        border:1px solid var(--rule);margin-top:24px}
+  .side{background:var(--panel);padding:18px 20px 22px;min-height:150px}
+  .sidehead{
+    display:flex;align-items:baseline;gap:9px;
+    padding-bottom:11px;margin-bottom:14px;border-bottom:1px solid var(--rule);
+  }
+  .who{font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+       text-transform:uppercase;color:var(--accent);font-weight:600;
+       opacity:0;transition:opacity .28s ease}
+  .who.show{opacity:1}
+  .body{white-space:pre-wrap;font-size:14.5px}
+  .body strong{font-weight:600}
+  .err{color:var(--warn);font-family:var(--mono);font-size:12.5px;line-height:1.6}
+  .empty{color:var(--soft);font-size:14px}
+
+  /* ---- decide ---- */
+  .decide{
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    padding:16px 0;border-bottom:1px solid var(--rule);
+  }
+  .decide.off{opacity:.4;pointer-events:none}
+
+  /* ---- log ---- */
+  .log{margin-top:26px}
+  table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  th{
+    font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--soft);font-weight:500;text-align:left;padding:0 10px 7px 0;
+    border-bottom:1px solid var(--rule);
+  }
+  td{padding:8px 10px 8px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+  td.q{font-family:var(--mono);font-size:12px;color:var(--mid);white-space:nowrap}
+  td.win{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:600}
+  td.txt{color:var(--mid);max-width:340px}
+  .none{color:var(--soft);font-size:14px;padding-top:10px}
+
+  @media (max-width:860px){
+    .pair{grid-template-columns:1fr}
+    td.txt{max-width:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Pairwise review <span>/ pledge vs pledge2</span></h1>
+    <div class="count" id="count">no decisions yet</div>
+  </header>
+
+  <section class="ask">
+    <div class="label">Prompt</div>
+    <textarea id="q" placeholder="Paste a question from the benchmark sheet."></textarea>
+    <div class="askrow">
+      <input type="text" id="pid" placeholder="Q-1" aria-label="Prompt ID">
+      <select id="probe" aria-label="Probe type">
+        <option>General</option>
+        <option>Misconception</option>
+        <option>Jurisdiction</option>
+        <option>Framework</option>
+        <option>Not covered</option>
+        <option>Deterministic referral</option>
+      </select>
+      <div class="spacer"></div>
+      <button id="run">Run comparison</button>
+    </div>
+  </section>
+
+  <div class="pair">
+    <div class="side">
+      <div class="sidehead">
+        <span class="label">Response 1</span>
+        <span class="who" id="who1"></span>
+      </div>
+      <div class="body empty" id="out1">Waiting for a comparison.</div>
+    </div>
+    <div class="side">
+      <div class="sidehead">
+        <span class="label">Response 2</span>
+        <span class="who" id="who2"></span>
+      </div>
+      <div class="body empty" id="out2">Waiting for a comparison.</div>
+    </div>
+  </div>
+
+  <section class="decide off" id="decide">
+    <span class="label">Decided by</span>
+    <select id="why" aria-label="What decided it">
+      <option value="hard gate">Hard gate</option>
+      <option value="probe check">Probe check</option>
+      <option value="register match">Register match</option>
+      <option value="actionability">Actionability</option>
+      <option value="continuity">Conversational continuity</option>
+      <option value="no clear winner">No clear winner</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="ghost" data-pick="1">1 wins</button>
+    <button class="ghost" data-pick="tie">Tie</button>
+    <button class="ghost" data-pick="2">2 wins</button>
+  </section>
+
+  <section class="log">
+    <div class="askrow" style="margin:0">
+      <span class="label">Decision log</span>
+      <div class="spacer"></div>
+      <button class="ghost" id="csv">Download CSV</button>
+      <button class="ghost" id="clear">Clear log</button>
+    </div>
+    <div id="logbox"></div>
+  </section>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let current = null;                                  // {left, right, prompt, pid, probe}
+let log = JSON.parse(localStorage.getItem('pledge_reviews') || '[]');
+
+function save(){ localStorage.setItem('pledge_reviews', JSON.stringify(log)); }
+
+function renderLog(){
+  $('count').textContent = log.length === 0 ? 'no decisions yet'
+    : log.length + (log.length === 1 ? ' decision' : ' decisions');
+  if(!log.length){ $('logbox').innerHTML = '<div class="none">Picks are saved in this browser.</div>'; return; }
+  let h = '<table><thead><tr><th>ID</th><th>Winner</th><th>Decided by</th><th>Prompt</th><th>Time</th></tr></thead><tbody>';
+  for(const r of [...log].reverse()){
+    h += `<tr><td class="q">${esc(r.prompt_id)}</td><td class="win">${esc(r.winner)}</td>`
+       + `<td class="q">${esc(r.decided_by)}</td><td class="txt">${esc(r.prompt)}</td>`
+       + `<td class="q">${esc(r.time)}</td></tr>`;
+  }
+  $('logbox').innerHTML = h + '</tbody></table>';
+}
+
+function esc(s){
+  return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+// pull the answer (or the error) out of one side of the /compare response
+function read(side){
+  if(!side) return {text:'No response returned.', bad:true};
+  if(side.error) return {text:'Request failed: ' + side.error, bad:true};
+  const c = side.response && side.response.content;
+  return c ? {text:c, bad:false} : {text:'Empty response.', bad:true};
+}
+
+function show(el, whoEl, res){
+  el.className = 'body' + (res.bad ? ' err' : '');
+  el.textContent = res.text;
+  whoEl.textContent = '';
+  whoEl.classList.remove('show');
+}
+
+async function run(){
+  const prompt = $('q').value.trim();
+  if(!prompt) return;
+
+  $('run').disabled = true;
+  $('run').textContent = 'Running…';
+  $('decide').classList.add('off');
+  for(const n of ['1','2']){
+    $('out'+n).className = 'body empty';
+    $('out'+n).textContent = 'Waiting on both bots…';
+    $('who'+n).classList.remove('show');
+  }
+
+  try{
+    const r = await fetch('/compare', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({user_message: prompt, include_trace: false})
+    });
+    if(!r.ok) throw new Error('server returned ' + r.status);
+    const d = await r.json();
+
+    // coin flip so the evaluator can't tell which bot is which
+    const flip = Math.random() < 0.5;
+    const left  = flip ? d.config_a : d.config_b;
+    const right = flip ? d.config_b : d.config_a;
+
+    current = {
+      left:  (left  && left.bot)  || 'config_a',
+      right: (right && right.bot) || 'config_b',
+      prompt,
+      pid: $('pid').value.trim() || '(no id)',
+      probe: $('probe').value
+    };
+
+    show($('out1'), $('who1'), read(left));
+    show($('out2'), $('who2'), read(right));
+    $('decide').classList.remove('off');
+  }catch(e){
+    current = null;
+    for(const n of ['1','2']){
+      $('out'+n).className = 'body err';
+      $('out'+n).textContent = 'Could not reach /compare — ' + e.message
+        + '\nIs the app still running in Docker?';
+    }
+  }finally{
+    $('run').disabled = false;
+    $('run').textContent = 'Run comparison';
+  }
+}
+
+function pick(which){
+  if(!current) return;
+  const winner = which === 'tie' ? 'tie' : (which === '1' ? current.left : current.right);
+
+  // reveal which bot was which, only after the call is made
+  $('who1').textContent = current.left;
+  $('who2').textContent = current.right;
+  $('who1').classList.add('show');
+  $('who2').classList.add('show');
+
+  log.push({
+    prompt_id: current.pid,
+    prompt: current.prompt,
+    probe: current.probe,
+    winner,
+    decided_by: $('why').value,
+    left: current.left,
+    right: current.right,
+    time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+    date: new Date().toISOString().slice(0,10)
+  });
+  save();
+  renderLog();
+  $('decide').classList.add('off');
+  current = null;
+}
+
+function csv(){
+  if(!log.length) return;
+  const cols = ['prompt_id','prompt','probe','winner','decided_by','left','right','date','time'];
+  const cell = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
+  const body = log.map(r => cols.map(c => cell(r[c])).join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([cols.join(',') + '\n' + body], {type:'text/csv'}));
+  const a = document.createElement('a');
+  a.href = url; a.download = 'review_log.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+$('run').addEventListener('click', run);
+$('csv').addEventListener('click', csv);
+$('clear').addEventListener('click', () => {
+  if(log.length && confirm('Delete all ' + log.length + ' saved decisions?')){
+    log = []; save(); renderLog();
+  }
+});
+document.querySelectorAll('[data-pick]').forEach(b =>
+  b.addEventListener('click', () => pick(b.dataset.pick)));
+$('q').addEventListener('keydown', e => {
+  if((e.metaKey || e.ctrlKey) && e.key === 'Enter') run();
+});
+
+renderLog();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+mode: rag_qa
+
+model:
+  engine: openai
+  model: gpt-5.4-mini
+  api_key_env_var: OPENAI_API_KEY

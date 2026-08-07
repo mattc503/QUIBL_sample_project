@@ -1,0 +1,16 @@
+display_name: PLEDGE for Teens
+description: Firearm safe storage guidance, written for a teen audience.
+conversation_history_turns: 6
+etl:
+  partition_strategy: fast
+  chunking_strategy: by_title
+  max_characters: 1500
+  overlap: 200
+index:
+  embedding_backend: openai
+  embedding_model: text-embedding-3-small
+  rag_top_k: 12
+retrieval:
+  strategy: multi_query
+  rewrite_model: gpt-5.4-nano
+  query_count: 4
