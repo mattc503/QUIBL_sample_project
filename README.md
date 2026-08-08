@@ -17,7 +17,7 @@ POST /pledge/chat
 GET /pledge
 
 Added:
-POST /pledge2/chat — chat with the teen-audience. bot
+POST /pledge2/chat — chat with the teen-audience.
 GET /pledge2 — test UI for the other bot
 GET /info — both bots bot_info() side by side, including config_hash, safety_hash, quality_hash, and index_collection
 POST /compare — sends one message to both bots concurrently, returns both
