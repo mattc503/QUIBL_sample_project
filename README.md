@@ -1,7 +1,7 @@
 Sample QUIBL Project
 
 What changed in this repo:
-Main.py (modified) - added a second bot instance and four endpoints
+main.py (modified) - added a second bot instance and four endpoints
 review.html (new) - blind side-by-side review page, served by /review
 interventions/pledge2/ (new) - 	second bot config, copied from pledge
 
@@ -43,3 +43,8 @@ How it works:
 5. Reveals which bot was which
 *I wouldn't touch the csv export
 
+Heres the structure for what I've built:
+Evaluator -> GET /review -> POST /compare -> pledge bot + pledge2 bot -> both answers back to the review page
+
+Just something to note:
+pledge bot reads interventions/pledge (control, unchanged). pledge2 bot reads interventions/pledge2 (same guardrails, teen prompt).
