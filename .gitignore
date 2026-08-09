@@ -220,3 +220,6 @@ __marimo__/
 .streamlit/secrets.toml.DS_Store
 *.json
 .env
+.DS_Store
+before.json
+after.json
