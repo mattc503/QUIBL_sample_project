@@ -53,7 +53,7 @@ How it works:
 4. Evaluator selects which rubric step decided it, then picks a winner (or tie)
 5. Reveals which bot was which
 
-The CSV export is a rough placeholder — not meant to be used as-is.
+The CSV export is a rough placeholder, so I wouldn't touch it.
 
 ## Structure
 
