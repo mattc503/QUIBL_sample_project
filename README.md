@@ -1,31 +1,50 @@
-# Sample QUIBL Project
+Sample QUIBL Project
 
-A minimal example of a [QUIBL](https://test.pypi.org/project/quibl/) intervention chatbot for PLEDGE
+What changed in this repo:
+main.py (modified) - added a second bot instance and four endpoints
+review.html (new) - blind side-by-side review page, served by /review
+interventions/pledge2/ (new) - 	second bot config, copied from pledge
 
-## Components
+Difference between the 2 bots:
+Only orchestration/prompts.yml is different.
+ - four lines changing the audience from parents/guardians to teens
+ - guardrails are identitical
 
-**`interventions/pledge/`**: the bot config directory:
+Endpoints:
 
-- `config.yml`: RAG settings (chunking, embedding model, retrieval strategy)
-- `guardrails/`: NeMo safety and topic rails
-- `orchestration/`: system prompt and main LLM config
-- `corpus/`: PDF documents the bot answers from
+Not changed:
+POST /pledge/chat
+GET /pledge
 
-**`main.py`**: a minimal FastAPI app that instantiates the bot from the config and exposes a chat endpoint and quibl's builtin test ui.
+Added:
+POST /pledge2/chat — chat with the teen-audience.
+GET /pledge2 — test UI for the other bot
+GET /info — both bots bot_info() side by side, including config_hash, safety_hash, quality_hash, and index_collection
+POST /compare — sends one message to both bots concurrently, returns both
+GET /review — serves review.html
 
-## Requirements
+POST /compare
+Request body is a standard quibl.AssistantChatRequest. Response:
+{
+  "config_a": { "bot": "pledge",  "response": { ... } },
+  "config_b": { "bot": "pledge2", "response": { ... } }
+}
 
-- Docker and Docker Compose
-- An OpenAI API key
+It runs both bots via asyncio.gather(..., return_exceptions=True), so they cant fail each other.
 
-## Run
+GET /review
+Single self contained HTML page. Served from the app itself so the browser calls /compare same-origin.
 
-```bash
-docker compose up
-```
+How it works:
+1. Type a question
+2. Calls /compare
+3. Displays both answers as "Response 1" and "Response 2". IT randomly swapped on every run, so the evaluator can't tell which bot is which
+4. Evaluator selects which rubric step decided it, then picks a winner (or tie)
+5. Reveals which bot was which
+*I wouldn't touch the csv export
 
-Then open `http://localhost:8000/pledge` in a browser to chat with the bot.
+Heres the structure for what I've built:
+Evaluator -> GET /review -> POST /compare -> pledge bot + pledge2 bot -> both answers back to the review page
 
-See `http://localhost:8000/docs` for fastapi's auto-generated docs of the api.
-
-The vector index is built from the corpus on first run and persists in a Docker volume (`quibl_data:/data/quibl`)
+Just something to note:
+pledge bot reads interventions/pledge (control, unchanged). pledge2 bot reads interventions/pledge2 (same guardrails, teen prompt).
